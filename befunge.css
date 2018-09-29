@@ -1,0 +1,69 @@
+.container {
+    width: 80%;
+    margin: 0 auto;
+}
+
+textarea {
+    resize: none;
+    margin: 0 auto;
+}
+
+.content > div {
+    margin-top: .75em;
+    font-family: monospace;
+}
+
+.text-center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.toolbar {
+    display: flex;
+    flex-flow: row-reverse wrap;
+    width: 75%;
+}
+
+.button {
+    padding: .5em 1em;
+    border: 1px solid #222;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer;
+}
+
+.success {
+    color: #113322;
+    background-color: #43dd55;
+    border-color: #2e9a3b;
+}
+
+.neutral {
+    color: #112233;
+    background-color: #4355ff;
+    border-color: #4355aa;
+}
+
+.danger {
+    color: #331122;
+    background-color: #dd1133;
+    border-color: #9a0b23;
+}
+
+.program-holder {
+    display: flex;
+}
+
+.details {
+    min-height: 2em;
+    background: #dedede;
+}
+
+.details > div {
+    background: #efefef;
+    color: #222222;
+    white-space: pre-wrap;
+    font-family: monospace;
+}

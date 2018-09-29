@@ -1,0 +1,14 @@
+{
+  "name": "Befunge 93 Interpreter",
+  "version": "1.0.0",
+  "dependencies": {
+    "file": "latest",
+    "file-api": "^0.10.4",
+    "filereader": "latest",
+    "get-stdin": "^6.0.0",
+    "mime": "latest",
+    "mime-types": "^2.1.20",
+    "mock-stdin": "^0.3.1",
+    "readline-sync": "^1.4.9"
+  }
+}
