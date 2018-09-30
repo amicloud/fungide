@@ -6,14 +6,14 @@ class Befunge {
     /**
      * @param {function} [onStackChange] - Called when the stack is updated (pushed or popped). Supplies one arg, current stack
      * @param {function} [onOutput] - Called when output happens (, or . commands). Supplies one arg, the generated output
-     * @param {function} [onProgramChange] - Called when program is changed (p command) Supplies one arg, current program matrix
+     * @param {function} [onCellChange] - Called when program is changed (p command) Supplies one arg, current program matrix
      * @param {function} [onStep] - Called when the interpreter makes a step (changing program cursor). Supplies two args the current X and Y values
      * @param {function} [onInput] - Called when the interpreter needs user input. Supplies one arg, prompt message
      */
-    constructor(onStackChange = null, onOutput = null, onProgramChange = null, onStep = null, onInput = null) {
+    constructor(onStackChange = null, onOutput = null, onCellChange = null, onStep = null, onInput = null) {
         this.onStackChangeCallback = onStackChange;
         this.onOutputCallback = onOutput;
-        this.onProgramChangeCallback = onProgramChange;
+        this.onCellChangeCallback = onCellChange;
         this.onStepCallback = onStep;
         this.onInputCallback = onInput;
         this.hasNext = false;
@@ -26,15 +26,13 @@ class Befunge {
         this.stack = [];
         this.stringMode = false;
         this.programLoaded = false;
-        this.generateEmptyProgram = () => {
+        this.program = function () {
             let program = [];
             for (let i = 0; i < 25; i++) {
                 program.push(new Array(80).fill(" "));
             }
-            this.programLoaded = false;
             return program;
-        };
-        this.program = this.generateEmptyProgram();
+        }();
     }
 
     onStackChange() {
@@ -61,16 +59,16 @@ class Befunge {
         doWhatWith(input);
     }
 
-    onProgramChange() {
+    onCellChange(x, y, newValue) {
         if (this.ignoreCallbacks) return;
-        if (this.onProgramChangeCallback) {
-            this.onProgramChangeCallback(this.program);
+        if (this.onCellChangeCallback) {
+            this.onCellChangeCallback(x, y, newValue);
         }
     }
 
     onStep() {
         if (this.ignoreCallbacks) return;
-        if (this.onProgramChangeCallback) {
+        if (this.onStepCallback) {
             this.onStepCallback(this.x, this.y);
         }
     }
@@ -335,8 +333,11 @@ class Befunge {
     }
 
     put() {
-        this.program[this.pop()][this.pop()] = String.fromCharCode(this.pop() % 256);
-        this.onProgramChange();
+        let y = this.pop();
+        let x = this.pop();
+        let v = String.fromCharCode(this.pop() % 256);
+        this.program[y][x] = v;
+        this.onCellChange(x, y, v);
     }
 
     get() {
@@ -399,18 +400,15 @@ class Befunge {
     }
 
     init(_file = null, _text = null) {
-        this.program = this.generateEmptyProgram();
         if (_file) {
             if (this.loadProgram(Befunge.readDataFromFile(_file))) {
                 this.hasNext = true;
                 this.programLoaded = true;
-                this.onProgramChange();
             }
         } else if (_text) {
             if (this.loadProgram(_text)) {
                 this.hasNext = true;
                 this.programLoaded = true;
-                this.onProgramChange();
             }
         } else {
             console.error("Supports running from a file or with straight up text for now.");

@@ -10,12 +10,18 @@
     <div class="content">
         <div class="toolbar">
             <div onclick="onClickRun();" id="run" class="button success">Run</div>
-            <div onclick="onClickPlay();" id="play" class="button neutral">Play ></div>
+            <div onclick="onClickResume();" id="resume" class="button success">Faster</div>
+            <div onclick="onClickPause();" id="pause" class="button danger">Pause</div>
+            <div onclick="onClickPlay();" id="play" class="button neutral">Play</div>
+            <div onclick="onClickCrawl();" id="crawl" class="button neutral">Crawl</div>
             <div onclick="onClickStep();" id="step" class="button neutral">Step +</div>
             <div onclick="onClickReset();" id="reset" class="button danger">Reset</div>
             <div onclick="onClickClear();" id="clear" class="button danger">Clear!</div>
+            <div onclick="onClickToggleInterpreter();" id="toggleMode" class="button neutral">Toggle Edit/Interpret
+            </div>
         </div>
         <div class="program-holder text-center">
+            <div id="interpreter" class="invisible"></div>
             <textarea id="program" autofocus cols="80" rows="25" maxlength="2000" title="Program"
                       placeholder=">v\n^<"></textarea>
         </div>

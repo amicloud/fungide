@@ -54,6 +54,7 @@ textarea {
 
 .program-holder {
     display: flex;
+    font-size: 13px;
 }
 
 .details {
@@ -66,4 +67,27 @@ textarea {
     color: #222222;
     white-space: pre-wrap;
     font-family: monospace;
+}
+
+.invisible {
+    display: none
+}
+
+.disabled {
+    background-color: grey !important;
+    pointer-events: none;
+}
+
+#interpreter {
+    background-color: #333;
+    color: #efefef;
+    margin: 0 auto;
+    white-space: pre-wrap;
+    padding: 2px;
+}
+
+#interpreter > .active-cell {
+    background-color: red;
+    color: #fff;
+
 }

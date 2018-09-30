@@ -1,10 +1,68 @@
 // const Befunge = require('befunge');
 // import {Befunge} from 'befunge'
 let program = $('#program');
+let interpreter = $('#interpreter');
 let stack = $('#stack');
 let output = $('#output');
+let buttonRun = $('#run');
+let buttonResume = $('#resume');
+let buttonPause = $('#pause');
+let buttonPlay = $('#play');
+let buttonStep = $('#step');
+let buttonReset = $('#reset');
+let buttonClear = $('#clear');
+let buttonCrawl = $('#crawl');
+let buttonToggleMode = $('#toggleMode');
+let editorButtons = [buttonClear, buttonReset];
+let interpreterButtons = [buttonRun, buttonResume, buttonPause, buttonPlay, buttonStep, buttonCrawl];
 let x = 0, y = 0;
-let befunge = new Befunge(onStackChange, onOutput, onProgramChange, onStep, onInput);
+let interpreterMode = false;
+let befunge = new Befunge(onStackChange, onOutput, onCellChange, onStep, onInput);
+let lastCell;
+let running = false;
+interpreter.width(program.width());
+interpreter.height(program.height());
+
+toggleInterpreterButtons();
+
+
+function toggleInterpreterMode() {
+    interpreterMode = !interpreterMode;
+    program.toggleClass("invisible");
+    interpreter.toggleClass("invisible");
+    toggleEditorButtons();
+    toggleInterpreterButtons();
+    if (interpreterMode) {
+        befunge.loadProgram(program.val());
+        interpreter.html(generateSpansFromProgram());
+        buttonToggleMode.text("Go To Editor Mode");
+    } else {
+        buttonToggleMode.text("Go To Interpreter Mode");
+    }
+}
+
+function generateSpansFromProgram() {
+    let output = "";
+    for (let y = 0; y < 25; y++) {
+        for (let x = 0; x < 80; x++) {
+            output += `<span id='${"c" + (y * 80 + x) }'>${befunge.program[y][x]}</span>`;
+        }
+        output = output.replace(/\s+$/, '') + "\n";
+    }
+    return output;
+}
+
+function toggleInterpreterButtons() {
+    interpreterButtons.forEach((button) => {
+        button.toggleClass('disabled');
+    });
+}
+
+function toggleEditorButtons() {
+    editorButtons.forEach((button) => {
+        button.toggleClass('disabled');
+    })
+}
 
 function onStackChange(_stack) {
     stack.text(_stack.join(" "));
@@ -18,30 +76,28 @@ function onInput(_message) {
     return prompt(_message);
 }
 
-function onProgramChange(_program) {
-    let newProgram = "";
-    for (let y = 0; y < 25; y++) {
-        for (let x = 0; x < 80; x++) {
-            newProgram += _program[y][x];
-        }
-        newProgram = newProgram.replace(/\s+$/, '') + "\n";
-    }
-    program.val(newProgram);
+function onCellChange(_x, _y, newValue) {
+    // interpreter.html(generateSpansFromProgram());
+    let currentCell = $(`#c${_y * 80 + _x}`);
+    currentCell.text(newValue);
 }
 
 function onStep(_x, _y) {
-    let pos = (_y * 80) + _x;
-    // console.log(pos);
+    if (lastCell) {
+        lastCell.removeClass("active-cell");
+    }
+    let currentCell = $(`#c${_y * 80 + _x}`);
+    currentCell.addClass("active-cell");
+    lastCell = currentCell;
 }
 
 function onClickRun() {
-    output.text("");
-    stack.text("");
+    resetPartialUI();
     befunge.reset();
     befunge.ignoreCallbacks = true;
     let bench = new Benchmark("Run");
     let tickCallback = () => {
-      bench.tick();
+        bench.tick();
     };
     bench.start();
     befunge.run(null, program.val(), tickCallback);
@@ -53,7 +109,7 @@ function onClickRun() {
 
 function onClickStep() {
     console.log("step clicked");
-    if(befunge.programLoaded === false){
+    if (befunge.programLoaded === false) {
         befunge.loadProgram(program.val());
     }
     befunge.stepInto(null, program.val());
@@ -61,21 +117,45 @@ function onClickStep() {
 
 function onClickClear() {
     if (alert("Are you sure you want to clear everything?")) {
-        program.text("");
+        resetAllUI();
+        befunge.reset();
     }
+}
+
+function resetAllUI() {
+    output.text("");
+    program.val("");
+    stack.text("");
+}
+
+function resetPartialUI() {
+    output.text("");
+    stack.text("");
 }
 
 function onClickPlay() {
     befunge.reset();
+    resetPartialUI();
     befunge.loadProgram(program.val());
+    playLoop(0);
+}
+
+function onClickCrawl(){
+    befunge.reset();
+    resetPartialUI();
+    befunge.loadProgram(program.val());
+    playLoop(100);
+}
+
+function playLoop(_delay = 0) {
     let bench = new Benchmark("Play");
     bench.start();
-    let delay = 16; // ms
+    let delay = _delay; // ms
     befunge.stepInto();
     let timeoutId = setTimeout(function loop() {
         bench.tick();
         befunge.stepInto();
-        if(befunge.hasNext){
+        if (befunge.hasNext) {
             timeoutId = setTimeout(loop, delay);
         } else {
             console.log("Ended");
@@ -88,30 +168,55 @@ function onClickReset() {
 
 }
 
+function onClickPause() {
+    befunge.hasNext = !befunge.hasNext;
+    if(running){
+        buttonPause.text("Resume");
+        befunge.hasNext = false;
+        running = false;
+    } else {
+        buttonPause.text("Pause");
+        befunge.hasNext = true;
+        running = true;
+        playLoop();
+    }
+}
+
+function onClickResume() {
+    befunge.hasNext = true;
+    running = true;
+    playLoop();
+}
+
+function onClickToggleInterpreter() {
+    toggleInterpreterMode();
+}
+
 class Benchmark {
-    constructor(name){
+    constructor(name) {
         this.name = name;
         this.startTime = null;
         this.endTime = null;
         this.elapsedTime = null;
         this.ticks = 0;
     }
-    start(){
+
+    start() {
         this.startTime = (new Date()).getTime();
         console.log(this.startTime);
     }
 
-    end(){
+    end() {
         this.endTime = (new Date()).getTime();
         this.elapsedTime = this.endTime - this.startTime;
         this.stats();
     }
 
-    tick(){
+    tick() {
         this.ticks += 1;
     }
 
-    stats(){
+    stats() {
         console.log(`-------BENCHMARKING-------`);
         console.log(`Benchmark stats for ${this.name}:`);
         console.log(`Start time: ${this.startTime}`);
