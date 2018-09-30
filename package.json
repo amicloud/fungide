@@ -1,15 +1,20 @@
 {
-  "name": "Befunge 93 Interpreter",
-  "version": "1.0.0",
+  "name": "befunge93-ide",
+  "version": "0.0.1",
+  "devDependencies": {
+    "jsdoc": "^3.5.5",
+    "minami": "^1.2.3",
+    "nyc": "^13.1.0"
+  },
+  "scripts": {
+    "generate-docs": "node_modules/.bin/jsdoc befunge93.js --configure .jsdoc.json --verbose",
+    "browserify": "browserify befunger.js -o bundle.js",
+    "watchify": "watchify befunger.js -o bundle.js -v"
+  },
   "dependencies": {
+    "befunge93": "^1.0.2",
     "browserify": "^16.2.3",
-    "file": "latest",
-    "file-api": "^0.10.4",
-    "filereader": "latest",
-    "get-stdin": "^6.0.0",
-    "mime": "latest",
-    "mime-types": "^2.1.20",
-    "mock-stdin": "^0.3.1",
-    "readline-sync": "^1.4.9"
+    "jquery": "^3.3.1",
+    "watchify": "^3.11.0"
   }
 }

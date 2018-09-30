@@ -1,0 +1,41 @@
+<html>
+<head>
+    <title>Befunger</title>
+    <link rel="stylesheet" type="text/css" href="befunger.css"/>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Befunge interpreter</h1>
+    </div>
+    <div class="content">
+        <div class="toolbar">
+            <div id="run" class="button success disabled">Run</div>
+            <div id="pause" class="button danger disabled">Pause</div>
+            <div id="play" class="button neutral disabled">Play</div>
+            <div id="crawl" class="button neutral disabled">Crawl</div>
+            <div id="step" class="button neutral disabled">Step +</div>
+            <div id="reset" class="button danger disabled">Reset</div>
+            <div id="clear" class="button danger">Clear!</div>
+            <div id="toggleMode" class="button neutral">To Interpreter Mode
+            </div>
+        </div>
+        <div class="program-holder text-center">
+            <div id="interpreter" class="invisible"></div>
+            <textarea id="program" autofocus cols="80" rows="25" maxlength="2000" title="Program"
+                      placeholder=">v\n^<"></textarea>
+        </div>
+        <div class="details stack-holder">
+            <div class="stack" id="stack"></div>
+        </div>
+        <div class="details output-holder">
+            <div class="output" id="output"></div>
+        </div>
+    </div>
+    <div class="footer">
+
+    </div>
+</div>
+<script src="bundle.js"></script>
+</body>
+</html>

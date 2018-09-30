@@ -11,6 +11,8 @@ textarea {
 .content > div {
     margin-top: .75em;
     font-family: monospace;
+    justify-content: center;
+    align-items: center;
 }
 
 .text-center {
@@ -21,10 +23,11 @@ textarea {
 .toolbar {
     display: flex;
     flex-flow: row-reverse wrap;
-    width: 75%;
+    /*width: 75%;*/
 }
 
 .button {
+    margin: 0 2px;
     padding: .5em 1em;
     border: 1px solid #222;
     -webkit-user-select: none;
@@ -60,6 +63,8 @@ textarea {
 .details {
     min-height: 2em;
     background: #dedede;
+    width: 75%;
+    margin: 0 auto;
 }
 
 .details > div {

@@ -1,11 +1,11 @@
-// const Befunge = require('befunge');
-// import Befunge from 'befunge'
+const Befunge93 = require('befunge93');
+const $ = require('jquery');
+
 let program = $('#program');
 let interpreter = $('#interpreter');
 let stack = $('#stack');
 let output = $('#output');
 let buttonRun = $('#run');
-let buttonResume = $('#resume');
 let buttonPause = $('#pause');
 let buttonPlay = $('#play');
 let buttonStep = $('#step');
@@ -13,18 +13,18 @@ let buttonReset = $('#reset');
 let buttonClear = $('#clear');
 let buttonCrawl = $('#crawl');
 let buttonToggleMode = $('#toggleMode');
-let editorButtons = [buttonClear, buttonReset];
-let interpreterButtons = [buttonRun, buttonResume, buttonPause, buttonPlay, buttonStep, buttonCrawl];
-let x = 0, y = 0;
+let editorButtons = [buttonClear];
+let interpreterButtons = [buttonRun, buttonReset, buttonPause, buttonPlay, buttonStep, buttonCrawl];
 let interpreterMode = false;
-let befunge = new Befunge(onStackChange, onOutput, onCellChange, onStep, onInput);
+let befunge = new Befunge93(onStackChange, onOutput, onCellChange, onStep, onInput);
 let lastCell;
 let running = false;
+let delay = 1;
 interpreter.width(program.width());
 interpreter.height(program.height());
 
-toggleInterpreterButtons();
-
+attachEventListeners();
+// toggleInterpreterButtons();
 
 function toggleInterpreterMode() {
     interpreterMode = !interpreterMode;
@@ -37,9 +37,11 @@ function toggleInterpreterMode() {
         befunge.reset();
         befunge.loadProgram(program.val());
         interpreter.html(generateSpansFromProgram());
-        buttonToggleMode.text("Go To Editor Mode");
+        onStep(0,0);
+        buttonToggleMode.text("To Editor Mode");
     } else {
-        buttonToggleMode.text("Go To Interpreter Mode");
+        befunge.pause();
+        buttonToggleMode.text("To Interpreter Mode");
     }
 }
 
@@ -93,6 +95,7 @@ function onStep(_x, _y) {
 }
 
 function onClickRun() {
+    running = true;
     resetPartialUI();
     befunge.reset();
     befunge.ignoreCallbacks = true;
@@ -101,11 +104,13 @@ function onClickRun() {
         bench.tick();
     };
     bench.start();
-    befunge.run(null, program.val(), tickCallback);
-    bench.end();
-    befunge.ignoreCallbacks = false;
-    onOutput(befunge.output);
-    onStackChange(befunge.stack);
+    befunge.run(program.val(), true, tickCallback)
+        .then((output) => {
+            bench.end();
+            befunge.ignoreCallbacks = false;
+            onOutput(output);
+            onStackChange(befunge.stack);
+        });
 }
 
 function onClickStep() {
@@ -135,23 +140,22 @@ function resetPartialUI() {
 }
 
 function onClickPlay() {
-    befunge.reset();
-    resetPartialUI();
+    running = true;
+    delay = 0;
     befunge.loadProgram(program.val());
-    playLoop(0);
+    playLoop();
 }
 
 function onClickCrawl(){
-    befunge.reset();
-    resetPartialUI();
+    delay = 100;
+    running = true;
     befunge.loadProgram(program.val());
-    playLoop(100);
+    playLoop();
 }
 
-function playLoop(_delay = 0) {
+function playLoop() {
     let bench = new Benchmark("Play");
     bench.start();
-    let delay = _delay; // ms
     befunge.stepInto();
     let timeoutId = setTimeout(function loop() {
         bench.tick();
@@ -172,7 +176,6 @@ function onClickReset() {
 }
 
 function onClickPause() {
-    befunge.hasNext = !befunge.hasNext;
     if(running){
         buttonPause.text("Resume");
         befunge.hasNext = false;
@@ -185,14 +188,35 @@ function onClickPause() {
     }
 }
 
-function onClickResume() {
-    befunge.hasNext = true;
-    running = true;
-    playLoop();
-}
-
 function onClickToggleInterpreter() {
     toggleInterpreterMode();
+}
+
+function attachEventListeners(){
+    buttonRun.click(function() {
+        onClickRun();
+    });
+    buttonPause.click(function() {
+       onClickPause();
+    });
+    buttonPlay.click(function() {
+        onClickPlay();
+    });
+    buttonStep.click(function() {
+        onClickStep();
+    });
+    buttonReset.click(function() {
+        onClickReset();
+    });
+    buttonClear.click(function() {
+        onClickClear();
+    });
+    buttonCrawl.click(function() {
+        onClickCrawl();
+    });
+    buttonToggleMode.click(function() {
+        onClickToggleInterpreter();
+    });
 }
 
 class Benchmark {
