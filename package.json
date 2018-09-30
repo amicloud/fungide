@@ -2,6 +2,7 @@
   "name": "Befunge 93 Interpreter",
   "version": "1.0.0",
   "dependencies": {
+    "browserify": "^16.2.3",
     "file": "latest",
     "file-api": "^0.10.4",
     "filereader": "latest",

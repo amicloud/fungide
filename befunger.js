@@ -1,5 +1,5 @@
 // const Befunge = require('befunge');
-// import {Befunge} from 'befunge'
+// import Befunge from 'befunge'
 let program = $('#program');
 let interpreter = $('#interpreter');
 let stack = $('#stack');
@@ -33,6 +33,8 @@ function toggleInterpreterMode() {
     toggleEditorButtons();
     toggleInterpreterButtons();
     if (interpreterMode) {
+        resetPartialUI();
+        befunge.reset();
         befunge.loadProgram(program.val());
         interpreter.html(generateSpansFromProgram());
         buttonToggleMode.text("Go To Editor Mode");
@@ -77,7 +79,6 @@ function onInput(_message) {
 }
 
 function onCellChange(_x, _y, newValue) {
-    // interpreter.html(generateSpansFromProgram());
     let currentCell = $(`#c${_y * 80 + _x}`);
     currentCell.text(newValue);
 }
@@ -165,7 +166,9 @@ function playLoop(_delay = 0) {
 }
 
 function onClickReset() {
-
+    resetPartialUI();
+    befunge.reset();
+    befunge.loadProgram(program.val());
 }
 
 function onClickPause() {

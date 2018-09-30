@@ -1,8 +1,4 @@
-// const fs = require('fs'), path = require('path');
-// const readline = require('readline-sync');
-
 class Befunge {
-
     /**
      * @param {function} [onStackChange] - Called when the stack is updated (pushed or popped). Supplies one arg, current stack
      * @param {function} [onOutput] - Called when output happens (, or . commands). Supplies one arg, the generated output
@@ -47,16 +43,12 @@ class Befunge {
         if (this.ignoreCallbacks) return;
         if (this.onOutputCallback) {
             this.onOutputCallback(value);
-        } else {
-            console.log(value)
         }
     }
 
-    onInput(doWhatWith, message) {
-        // if (this.ignoreCallbacks) return;
-        let input = this.onInputCallback ?
+    onInput(message) {
+        return this.onInputCallback ?
             this.onInputCallback(message) : '';
-        doWhatWith(input);
     }
 
     onCellChange(x, y, newValue) {
@@ -357,18 +349,11 @@ class Befunge {
     }
 
     inInt() {
-        let callback = (input) => {
-            if (!input) return;
-            this.push(parseInt(input));
-        };
-        this.onInput(callback, "Enter integer: ");
+        this.push(parseInt(this.onInput("Enter integer: ")));
     }
 
     inAscii() {
-        let callback = (input) => {
-            this.push(input.charCodeAt(0) % 256);
-        };
-        this.onInput(callback, "Enter character: ");
+        this.push(parseInt(this.onInput("Enter ASCII character: ").charCodeAt(0)));
     }
 
     terminateProgram() {
@@ -441,13 +426,16 @@ class Befunge {
     }
 
     run(_file = null, _text = null, onTick = null) {
-        this.init(_file, _text);
-        while (this.hasNext) {
-            if (onTick) {
-                onTick();
+        return new Promise((resolve, reject) => {
+            this.init(_file, _text);
+            while (this.hasNext) {
+                if (onTick) {
+                    onTick();
+                }
+                this.stepInto();
             }
-            this.stepInto();
-        }
+            resolve(this.output);
+        });
     }
 
     reset() {
@@ -457,11 +445,7 @@ class Befunge {
         this.y = 0;
         this.right();
         this.stringMode = false;
-
     }
 }
 
-// module.exports = Befunge;
-
-// let bef = new Befunge();
-// bef.run('one_line_test.funge');
+module.exports = Befunge;
