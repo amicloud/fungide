@@ -25,7 +25,32 @@ interpreter.width(program.width());
 interpreter.height(program.height());
 
 attachEventListeners();
-// toggleInterpreterButtons();
+
+function onStackChange(_stack) {
+    stack.text(_stack.join(" "));
+}
+
+function onOutput(_output) {
+    output.text(output.text() + _output);
+}
+
+function onInput(_message) {
+    return prompt(_message);
+}
+
+function onCellChange(_x, _y, newValue) {
+    let currentCell = $(`#c${_y * 80 + _x}`);
+    currentCell.text(newValue);
+}
+
+function onStep(_x, _y) {
+    if (lastCell) {
+        lastCell.removeClass("active-cell");
+    }
+    let currentCell = $(`#c${_y * 80 + _x}`);
+    currentCell.addClass("active-cell");
+    lastCell = currentCell;
+}
 
 function toggleInterpreterMode() {
     interpreterMode = !interpreterMode;
@@ -69,30 +94,45 @@ function toggleEditorButtons() {
     })
 }
 
-function onStackChange(_stack) {
-    stack.text(_stack.join(" "));
+function resetAllUI() {
+    output.text("");
+    program.val("");
+    stack.text("");
 }
 
-function onOutput(_output) {
-    output.text(output.text() + _output);
+function resetPartialUI() {
+    output.text("");
+    stack.text("");
 }
 
-function onInput(_message) {
-    return prompt(_message);
+function playLoop() {
+    let bench = new Benchmark("Play");
+    bench.start();
+    befunge.stepInto();
+    let timeoutId = setTimeout(function loop() {
+        bench.tick();
+        befunge.stepInto();
+        if (befunge.hasNext) {
+            timeoutId = setTimeout(loop, delay);
+        } else {
+            console.log("Ended");
+            bench.end();
+        }
+    }, delay);
 }
 
-function onCellChange(_x, _y, newValue) {
-    let currentCell = $(`#c${_y * 80 + _x}`);
-    currentCell.text(newValue);
+function onClickPlay() {
+    running = true;
+    delay = 0;
+    befunge.loadProgram(program.val());
+    playLoop();
 }
 
-function onStep(_x, _y) {
-    if (lastCell) {
-        lastCell.removeClass("active-cell");
-    }
-    let currentCell = $(`#c${_y * 80 + _x}`);
-    currentCell.addClass("active-cell");
-    lastCell = currentCell;
+function onClickCrawl(){
+    delay = 100;
+    running = true;
+    befunge.loadProgram(program.val());
+    playLoop();
 }
 
 function onClickRun() {
@@ -127,47 +167,6 @@ function onClickClear() {
         resetAllUI();
         befunge.reset();
     }
-}
-
-function resetAllUI() {
-    output.text("");
-    program.val("");
-    stack.text("");
-}
-
-function resetPartialUI() {
-    output.text("");
-    stack.text("");
-}
-
-function onClickPlay() {
-    running = true;
-    delay = 0;
-    befunge.loadProgram(program.val());
-    playLoop();
-}
-
-function onClickCrawl(){
-    delay = 100;
-    running = true;
-    befunge.loadProgram(program.val());
-    playLoop();
-}
-
-function playLoop() {
-    let bench = new Benchmark("Play");
-    bench.start();
-    befunge.stepInto();
-    let timeoutId = setTimeout(function loop() {
-        bench.tick();
-        befunge.stepInto();
-        if (befunge.hasNext) {
-            timeoutId = setTimeout(loop, delay);
-        } else {
-            console.log("Ended");
-            bench.end();
-        }
-    }, delay);
 }
 
 function onClickReset() {
@@ -265,12 +264,16 @@ class Befunge93 {
 
     /**
      * @constructor
-     * @param {Befunge93~onStackChange} [onStackChange] - Called when the stack is updated (pushed or popped). Supplies 1 arg, current stack
-     * @param {Befunge93~onOutput} [onOutput] - Called when output happens (, or . commands). Supplies 1 arg, the generated output
-     * @param {Befunge93~onCellChange} [onCellChange] - Called when program is changed (p command) Supplies 3 args, current x, current y,
-     *                                    and the new value of the cell
-     * @param {Befunge93~onStep} [onStep] - Called when the interpreter makes a step (changing program cursor). Supplies 2 args the current X and Y values
-     * @param {Befunge93~onInput} [onInput] - Called when the interpreter needs user input. Supplies 1 arg, prompt message
+     * @param {Befunge93~onStackChange} [onStackChange] - Called when the stack is updated (pushed or popped). Supplies
+     *     1 arg, current stack
+     * @param {Befunge93~onOutput} [onOutput] - Called when output happens (, or . commands). Supplies 1 arg, the
+     *     generated output
+     * @param {Befunge93~onCellChange} [onCellChange] - Called when program is changed (p command) Supplies 3 args,
+     *     current x, current y, and the new value of the cell
+     * @param {Befunge93~onStep} [onStep] - Called when the interpreter makes a step (changing program cursor).
+     *     Supplies 2 args the current X and Y values
+     * @param {Befunge93~onInput} [onInput] - Called when the interpreter needs user input. Supplies 1 arg, prompt
+     *     message
      */
     constructor(onStackChange = null, onOutput = null, onCellChange = null, onStep = null, onInput = null) {
         this.onStackChange = onStackChange;
@@ -335,43 +338,44 @@ class Befunge93 {
      * @callback Befunge93~onTick
      */
 
+    /** @private
+     *  @static */
+    static isHexDigit(value) {
+        let a = parseInt(value, 16);
+        return (a.toString(16) === value.toLowerCase());
+    }
+
     /** @private */
     _onStackChange() {
-        if (this.ignoreCallbacks) return;
-        if (this.onStackChange) {
-            this.onStackChange(this.stack);
-        }
+        if (this.ignoreCallbacks) return null;
+        return this.onStackChange ? this.onStackChange(this.stack) : null;
     }
 
     /** @private */
     _onOutput(value) {
         this.output += value;
-        if (this.ignoreCallbacks) return;
-        if (this.onOutput) {
-            this.onOutput(value);
-        }
+        if (this.ignoreCallbacks) return null;
+        return this.onOutput ? this.onOutput(value) : null;
     }
 
     /** @private */
     _onInput(message) {
-        return this.onInput ?
-            this.onInput(message) : '';
+        if (this.onInput === null) {
+            throw new Error("You must supply an On Input callback if your code needs input! Else it will never work.");
+        }
+        return this.onInput(message);
     }
 
     /** @private */
     _onCellChange(x, y, newValue) {
-        if (this.ignoreCallbacks) return;
-        if (this.onCellChange) {
-            this.onCellChange(x, y, newValue);
-        }
+        if (this.ignoreCallbacks) return null;
+        this.onCellChange ? this.onCellChange(x, y, newValue) : null;
     }
 
     /** @private */
     _onStep() {
-        if (this.ignoreCallbacks) return;
-        if (this.onStep) {
-            this.onStep(this.x, this.y);
-        }
+        if (this.ignoreCallbacks) return null;
+        this.onStep ? this.onStep(this.x, this.y) : null;
     }
 
     /** @private */
@@ -388,7 +392,7 @@ class Befunge93 {
     /** @private */
     push(value) {
         this.stack.push(value);
-        this._onStackChange()
+        this._onStackChange();
     }
 
     /** @private */
@@ -419,7 +423,7 @@ class Befunge93 {
             } else {
                 switch (token) {
                     case " ":
-                        break;
+                        return null;
                     case ">":
                         this.right();
                         break;
@@ -536,7 +540,7 @@ class Befunge93 {
         if (b !== 0) {
             this.push(Math.trunc(a / b));
         } else {
-            this.push(0)
+            this.push(0);
         }
     }
 
@@ -659,22 +663,28 @@ class Befunge93 {
 
     /** @private */
     get() {
-        this.push(this.program[this.pop()][this.pop()].charCodeAt(0));
+        let y = this.pop();
+        let x = this.pop();
+        if ((0 <= x && x < 80) && (0 <= y && y < 25)){
+            this.push(this.program[y][x].charCodeAt(0));
+        } else {
+            this.push(0);
+        }
     }
 
     /** @private */
     bridge() {
-        this.step()
+        this.step();
     }
 
     /** @private */
     outInt() {
-        this._onOutput(this.pop().toString());
+        return this._onOutput(this.pop().toString() + " ");
     }
 
     /** @private */
     outAscii() {
-        this._onOutput(String.fromCharCode(this.pop()));
+        return this._onOutput(String.fromCharCode(this.pop()));
     }
 
     /** @private */
@@ -709,9 +719,9 @@ class Befunge93 {
     /** @private */
     getToken(x, y) {
         if (!(0 <= x < 80) || !(0 <= y < 25)) {
-            throw new Error("Coordinates out of range!")
+            throw new Error("Coordinates out of range!");
         }
-        return this.program[y][x]
+        return this.program[y][x];
     }
 
     /** @private */
@@ -719,16 +729,7 @@ class Befunge93 {
         if (this.loadProgram(program)) {
             this.hasNext = true;
             this.programLoaded = true;
-        } else {
-            throw new Error("Program failed to load");
         }
-    }
-
-    /** @private
-     *  @static */
-    static isHexDigit(value) {
-        let a = parseInt(value, 16);
-        return (a.toString(16) === value.toLowerCase())
     }
 
     /** @public */
@@ -744,7 +745,7 @@ class Befunge93 {
             } else {
                 this.step();
             }
-            if(this.getToken(this.x, this.y) === " "){
+            if (this.getToken(this.x, this.y) === " ") {
                 this.stepInto();
             }
         }
