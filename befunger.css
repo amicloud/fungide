@@ -94,5 +94,20 @@ textarea {
 #interpreter > .active-cell {
     background-color: red;
     color: #fff;
+}
+
+.header {
+    margin: 13px auto;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-around;
+}
+
+.header > * {
+    margin: 0;
+    font-family: Verdana, sans-serif;
+}
+
+.header > h1 {
 
 }

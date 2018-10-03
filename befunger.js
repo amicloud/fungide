@@ -24,7 +24,32 @@ interpreter.width(program.width());
 interpreter.height(program.height());
 
 attachEventListeners();
-// toggleInterpreterButtons();
+
+function onStackChange(_stack) {
+    stack.text(_stack.join(" "));
+}
+
+function onOutput(_output) {
+    output.text(output.text() + _output);
+}
+
+function onInput(_message) {
+    return prompt(_message);
+}
+
+function onCellChange(_x, _y, newValue) {
+    let currentCell = $(`#c${_y * 80 + _x}`);
+    currentCell.text(newValue);
+}
+
+function onStep(_x, _y) {
+    if (lastCell) {
+        lastCell.removeClass("active-cell");
+    }
+    let currentCell = $(`#c${_y * 80 + _x}`);
+    currentCell.addClass("active-cell");
+    lastCell = currentCell;
+}
 
 function toggleInterpreterMode() {
     interpreterMode = !interpreterMode;
@@ -68,30 +93,45 @@ function toggleEditorButtons() {
     })
 }
 
-function onStackChange(_stack) {
-    stack.text(_stack.join(" "));
+function resetAllUI() {
+    output.text("");
+    program.val("");
+    stack.text("");
 }
 
-function onOutput(_output) {
-    output.text(output.text() + _output);
+function resetPartialUI() {
+    output.text("");
+    stack.text("");
 }
 
-function onInput(_message) {
-    return prompt(_message);
+function playLoop() {
+    let bench = new Benchmark("Play");
+    bench.start();
+    befunge.stepInto();
+    let timeoutId = setTimeout(function loop() {
+        bench.tick();
+        befunge.stepInto();
+        if (befunge.hasNext) {
+            timeoutId = setTimeout(loop, delay);
+        } else {
+            console.log("Ended");
+            bench.end();
+        }
+    }, delay);
 }
 
-function onCellChange(_x, _y, newValue) {
-    let currentCell = $(`#c${_y * 80 + _x}`);
-    currentCell.text(newValue);
+function onClickPlay() {
+    running = true;
+    delay = 0;
+    befunge.loadProgram(program.val());
+    playLoop();
 }
 
-function onStep(_x, _y) {
-    if (lastCell) {
-        lastCell.removeClass("active-cell");
-    }
-    let currentCell = $(`#c${_y * 80 + _x}`);
-    currentCell.addClass("active-cell");
-    lastCell = currentCell;
+function onClickCrawl(){
+    delay = 100;
+    running = true;
+    befunge.loadProgram(program.val());
+    playLoop();
 }
 
 function onClickRun() {
@@ -126,47 +166,6 @@ function onClickClear() {
         resetAllUI();
         befunge.reset();
     }
-}
-
-function resetAllUI() {
-    output.text("");
-    program.val("");
-    stack.text("");
-}
-
-function resetPartialUI() {
-    output.text("");
-    stack.text("");
-}
-
-function onClickPlay() {
-    running = true;
-    delay = 0;
-    befunge.loadProgram(program.val());
-    playLoop();
-}
-
-function onClickCrawl(){
-    delay = 100;
-    running = true;
-    befunge.loadProgram(program.val());
-    playLoop();
-}
-
-function playLoop() {
-    let bench = new Benchmark("Play");
-    bench.start();
-    befunge.stepInto();
-    let timeoutId = setTimeout(function loop() {
-        bench.tick();
-        befunge.stepInto();
-        if (befunge.hasNext) {
-            timeoutId = setTimeout(loop, delay);
-        } else {
-            console.log("Ended");
-            bench.end();
-        }
-    }, delay);
 }
 
 function onClickReset() {

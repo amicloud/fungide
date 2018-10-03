@@ -12,7 +12,7 @@
     "watchify": "watchify befunger.js -o bundle.js -v"
   },
   "dependencies": {
-    "befunge93": "^1.0.2",
+    "befunge93": "^1.0.4",
     "browserify": "^16.2.3",
     "jquery": "^3.3.1",
     "watchify": "^3.11.0"
